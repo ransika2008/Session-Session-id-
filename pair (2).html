@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pair Code with Matrix Effect</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: black;
+      font-family: 'Arial', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    .container {
+      position: relative;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 30px rgba(250, 249, 249, 0.7);
+      width: 320px;
+    }
+
+    .matrix-text {
+      font-size: 24px;
+      font-weight: bold;
+      color: lime;
+      animation: glitch 1s infinite alternate;
+      margin-bottom: 20px;
+    }
+
+    @keyframes glitch {
+      0% { text-shadow: 2px 2px red, -2px -2px blue; }
+      100% { text-shadow: -2px -2px red, 2px 2px blue; }
+    }
+
+    .input-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .input-container input {
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background: #222;
+      color: white;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    .input-container button {
+      padding: 12px;
+      border: none;
+      border-radius: 5px;
+      background: #FF5733;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    .input-container button:hover {
+      background: #FFC300;
+      color: black;
+    }
+
+    .pair-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 20px;
+      gap: 15px;
+      display: none;
+    }
+
+    .pair-code {
+      font-size: 18px;
+      font-weight: bold;
+      color: white;
+      background: #111;
+      padding: 8px 12px;
+      border-radius: 5px;
+      display: inline-block;
+    }
+
+    .copy-btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      background: lime;
+      color: black;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+
+    .copy-btn:hover {
+      background: yellow;
+      color: black;
+    }
+
+    .error-message {
+      color: red;
+      font-weight: bold;
+    }
+
+    .success-message {
+      color: white;
+      font-weight: normal;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="matrixCanvas"></canvas>
+
+  <div class="container">
+    <h3 class="matrix-text">PINk_QUEEN_MD</h3>
+    <p style="color:white;">Enter Your Number with Country Code</p>
+
+    <div class="input-container">
+      <input type="number" id="number" placeholder="94xxxxxxxx">
+      <button id="submit">Submit</button>
+    </div>
+
+    <div class="pair-container" id="pair-container">
+      <span class="pair-code" id="pair-code"></span>
+      <button class="copy-btn" id="copy-btn">Copy</button>
+    </div>
+    
+    <p id="pair-message" class="success-message"></p>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.0.0-alpha.1/axios.min.js"></script>
+  <script>
+    // Matrix Animation
+    const canvas = document.getElementById("matrixCanvas");
+    const ctx = canvas.getContext("2d");
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const matrixChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}PINk_QUEEN_MD";
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    const drops = Array.from({ length: columns }).fill(1);
+
+    function drawMatrix() {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#0F0";
+      ctx.font = fontSize + "px monospace";
+
+      drops.forEach((y, x) => {
+        const text = matrixChars.charAt(Math.floor(Math.random() * matrixChars.length));
+        ctx.fillText(text, x * fontSize, y * fontSize);
+
+        if (y * fontSize > canvas.height && Math.random() > 0.975) {
+          drops[x] = 0;
+        }
+        drops[x]++;
+      });
+
+      requestAnimationFrame(drawMatrix);
+    }
+
+    drawMatrix();
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+
+    // WhatsApp Pairing Code Script
+    let pairMessage = document.getElementById("pair-message");
+    let submitBtn = document.getElementById("submit");
+    let numberInput = document.getElementById("number");
+    let pairContainer = document.getElementById("pair-container");
+    let pairCode = document.getElementById("pair-code");
+    let copyBtn = document.getElementById("copy-btn");
+
+    submitBtn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (!numberInput.value) {
+        pairMessage.innerHTML = '<span class="error-message">Enter your WhatsApp number with Country Code</span>';
+      } else if (numberInput.value.replace(/[^0-9]/g, "").length < 11) {
+        pairMessage.innerHTML = '<span class="error-message">Invalid Number</span>';
+      } else {
+        const Wasi_Tech = numberInput.value.replace(/[^0-9]/g, "");
+        numberInput.value = "+" + Wasi_Tech;
+        numberInput.style = "color:lime;font-size:20px";
+        pairMessage.innerHTML = '<span style="color:white;">Please Wait...</span>';
+
+        try {
+          let { data } = await axios(`/code?number=${Wasi_Tech}`);
+          let code = data.code || "Service Unavailable";
+
+          // Show the Pair Code
+          pairCode.innerText = code;
+          pairContainer.style.display = "flex";
+          pairMessage.innerHTML = "";
+        } catch (error) {
+          pairMessage.innerHTML = '<span class="error-message">Error fetching code</span>';
+        }
+      }
+    });
+
+    // Copy Function
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(pairCode.innerText);
+      copyBtn.innerText = "Copied!";
+      setTimeout(() => copyBtn.innerText = "Copy", 2000);
+    });
+  </script>
+</body>
+</html>
